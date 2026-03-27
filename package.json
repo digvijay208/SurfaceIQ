@@ -1,0 +1,22 @@
+{
+  "name": "surfaceiq",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @surfaceiq/core && npm run build --workspace @surfaceiq/web && npm run build --workspace @surfaceiq/worker",
+    "dev": "concurrently -k -n web,worker -c cyan,green \"npm.cmd run dev:web\" \"npm.cmd run dev:worker\"",
+    "dev:web": "npm run dev --workspace @surfaceiq/web",
+    "dev:worker": "npm run dev --workspace @surfaceiq/worker",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

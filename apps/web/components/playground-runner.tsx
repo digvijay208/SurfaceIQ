@@ -10,6 +10,7 @@ interface PlaygroundRunnerProps {
   initialTargetUrl: string;
   isAuthenticated: boolean;
   autoRun: boolean;
+  showcaseMode?: boolean;
 }
 
 type AuthMode = "public" | "credentials" | "session";
@@ -20,7 +21,8 @@ export function PlaygroundRunner({
   references,
   initialTargetUrl,
   isAuthenticated,
-  autoRun
+  autoRun,
+  showcaseMode = false
 }: PlaygroundRunnerProps) {
   const router = useRouter();
   const [editablePrompt, setEditablePrompt] = useState(prompt);
@@ -49,6 +51,11 @@ export function PlaygroundRunner({
   }, [editablePrompt, targetUrl]);
 
   async function executeRun() {
+    if (showcaseMode) {
+      setError("Hosted showcase mode is read-only while the global scanning backend is being connected.");
+      return;
+    }
+
     if (!targetUrl.trim()) {
       setError("Target URL is required.");
       return;
@@ -154,7 +161,13 @@ export function PlaygroundRunner({
               />
             </label>
 
-            {isAuthenticated ? (
+            {showcaseMode ? (
+              <div className="playground-auth-hint">
+                This hosted version is a showcase deployment. You can explore the flow here, but live
+                scans and account creation are disabled until the production backend migration is
+                complete.
+              </div>
+            ) : isAuthenticated ? (
               <div className="auth-scan-panel">
                 <div className="scan-mode-grid">
                   <button
@@ -273,7 +286,7 @@ export function PlaygroundRunner({
               }
               type="button"
             >
-              {isPending ? "Launching..." : "Run"}
+              {showcaseMode ? "Showcase mode" : isPending ? "Launching..." : "Run"}
             </button>
             <button
               className="playground-secondary"

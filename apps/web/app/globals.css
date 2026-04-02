@@ -185,6 +185,10 @@ input {
   transition: color 180ms ease, transform 180ms ease;
 }
 
+.landing-inline-muted {
+  cursor: default;
+}
+
 .landing-nav a:hover,
 .landing-inline-link:hover {
   color: var(--landing-text);
@@ -344,6 +348,16 @@ input {
   align-items: flex-start;
   max-width: 560px;
   margin-top: 10px;
+}
+
+.landing-showcase-note {
+  max-width: 560px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--landing-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--landing-muted);
+  line-height: 1.65;
 }
 
 .landing-editorial-line {

@@ -1,7 +1,11 @@
-import { FileArtifactStore, FileScanRepository, sortFindingsBySeverity } from "@surfaceiq/core";
+import {
+  createArtifactStoreFromEnv,
+  createScanRepositoryFromEnv,
+  sortFindingsBySeverity
+} from "@surfaceiq/core";
 
-export const scanRepository = new FileScanRepository();
-export const artifactStore = new FileArtifactStore();
+export const scanRepository = createScanRepositoryFromEnv();
+export const artifactStore = createArtifactStoreFromEnv();
 
 export async function getSortedScanDetail(scanId: string, userId: string) {
   const detail = await scanRepository.getScanDetailForUser(scanId, userId);

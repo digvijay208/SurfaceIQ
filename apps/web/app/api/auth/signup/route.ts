@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isShowcaseMode } from "../../../../lib/app-mode";
 import { setSessionCookie } from "../../../../lib/auth";
 import { scanRepository } from "../../../../lib/server";
 
@@ -7,6 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (isShowcaseMode()) {
+    return NextResponse.json(
+      { error: "Hosted showcase mode does not allow account creation yet." },
+      { status: 503 }
+    );
+  }
+
   const payload = (await request.json().catch(() => null)) as
     | { email?: string; password?: string; name?: string }
     | null;

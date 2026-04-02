@@ -1,10 +1,14 @@
+import { existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { chromium, type BrowserContext, type Page } from "playwright";
 
 import {
-  FileArtifactStore,
-  FileScanRepository,
   analyzePage,
+  createArtifactStoreFromEnv,
   createFindingRecord,
+  createScanRepositoryFromEnv,
   decryptSecret,
   makeId,
   normalizeUrl,
@@ -17,8 +21,24 @@ import {
   type ScanRecord
 } from "@surfaceiq/core";
 
-const repository = new FileScanRepository();
-const artifactStore = new FileArtifactStore();
+function loadRepoEnvFiles() {
+  const workerDir = dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    resolve(workerDir, "../../../.env.local"),
+    resolve(workerDir, "../../../.env")
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      process.loadEnvFile(candidate);
+    }
+  }
+}
+
+loadRepoEnvFiles();
+
+const repository = createScanRepositoryFromEnv();
+const artifactStore = createArtifactStoreFromEnv();
 const POLL_INTERVAL_MS = 2_000;
 
 async function workerLoop() {
@@ -262,14 +282,11 @@ async function performCredentialLogin(context: BrowserContext, scan: ScanRecord)
     });
 
     await page.locator(passwordSelector).first().fill(password);
-    const passwordArtifact = await captureStepScreenshot(scan, page, "Fill password");
-    await repository.addArtifact(passwordArtifact);
     await repository.appendRunStep({
       scanId: scan.id,
       title: "Fill password",
       detail: `Filled the password field ${passwordSelector}.`,
       status: "completed",
-      screenshotArtifactId: passwordArtifact.id,
       url: loginUrl
     });
 
@@ -678,3 +695,4 @@ workerLoop().catch((error) => {
   console.error("SurfaceIQ worker crashed", error);
   process.exitCode = 1;
 });
+

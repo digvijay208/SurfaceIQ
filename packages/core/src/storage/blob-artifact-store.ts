@@ -1,13 +1,11 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { get, put } from "@vercel/blob";
 
 import type { ArtifactKind, ArtifactRecord } from "../types";
 import type { ArtifactStore } from "./contracts";
 import { makeId, nowIso } from "../utils";
-import { getArtifactRoot } from "./paths";
 
-export class FileArtifactStore implements ArtifactStore {
-  private readonly artifactRoot = getArtifactRoot(import.meta.url);
+export class BlobArtifactStore implements ArtifactStore {
+  constructor(private readonly token = process.env.BLOB_READ_WRITE_TOKEN) {}
 
   async writeTextArtifact(input: {
     scanId: string;
@@ -27,8 +25,12 @@ export class FileArtifactStore implements ArtifactStore {
       ...(input.pageId ? { pageId: input.pageId } : {})
     });
 
-    await mkdir(join(this.artifactRoot, input.scanId), { recursive: true });
-    await writeFile(join(this.artifactRoot, artifact.relativePath), input.text, "utf8");
+    await put(artifact.relativePath, input.text, {
+      access: "private",
+      addRandomSuffix: false,
+      contentType: input.mimeType,
+      ...(this.token ? { token: this.token } : {})
+    });
 
     return artifact;
   }
@@ -51,14 +53,28 @@ export class FileArtifactStore implements ArtifactStore {
       ...(input.pageId ? { pageId: input.pageId } : {})
     });
 
-    await mkdir(join(this.artifactRoot, input.scanId), { recursive: true });
-    await writeFile(join(this.artifactRoot, artifact.relativePath), input.data);
+    await put(artifact.relativePath, input.data, {
+      access: "private",
+      addRandomSuffix: false,
+      contentType: input.mimeType,
+      ...(this.token ? { token: this.token } : {})
+    });
 
     return artifact;
   }
 
   async readArtifact(record: ArtifactRecord): Promise<Buffer> {
-    return readFile(join(this.artifactRoot, record.relativePath));
+    const result = await get(record.relativePath, {
+      access: "private",
+      ...(this.token ? { token: this.token } : {})
+    });
+
+    if (!result) {
+      throw new Error(`Artifact ${record.id} is missing from blob storage.`);
+    }
+
+    const body = await new Response(result.stream).arrayBuffer();
+    return Buffer.from(body);
   }
 
   private createArtifactRecord(input: {
@@ -78,7 +94,7 @@ export class FileArtifactStore implements ArtifactStore {
       kind: input.kind,
       label: input.label,
       mimeType: input.mimeType,
-      relativePath: join(input.scanId, filename),
+      relativePath: `${input.scanId}/${filename}`,
       createdAt: nowIso(),
       ...(input.pageId ? { pageId: input.pageId } : {})
     };

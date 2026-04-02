@@ -4,6 +4,7 @@ import { PromptLauncher } from "../components/prompt-launcher";
 import { ScanStatusCard } from "../components/scan-status-card";
 import { LogoutButton } from "../components/logout-button";
 import { LandingThemeToggle } from "../components/landing-theme-toggle";
+import { isShowcaseMode } from "../lib/app-mode";
 import { getCurrentUser } from "../lib/auth";
 import { scanRepository } from "../lib/server";
 
@@ -59,6 +60,7 @@ function formatCompactNumber(value: number) {
 }
 
 export default async function HomePage() {
+  const showcaseMode = isShowcaseMode();
   const user = await getCurrentUser();
   const scans = user ? await scanRepository.listScans(user.id) : [];
   const totalFindings = scans.reduce((sum, scan) => sum + scan.findingsCount, 0);
@@ -121,12 +123,23 @@ export default async function HomePage() {
               </>
             ) : (
               <>
-                <Link className="landing-inline-link" href="/login">
-                  Sign in
-                </Link>
-                <Link className="landing-primary-button" href="/signup">
-                  Create account
-                </Link>
+                {showcaseMode ? (
+                  <>
+                    <span className="landing-inline-link landing-inline-muted">Showcase mode</span>
+                    <Link className="landing-primary-button" href="/playground?prompt=security%20check">
+                      Explore flow
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link className="landing-inline-link" href="/login">
+                      Sign in
+                    </Link>
+                    <Link className="landing-primary-button" href="/signup">
+                      Create account
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </div>
@@ -146,7 +159,11 @@ export default async function HomePage() {
               <a className="landing-primary-button" href="#launcher">
                 Launch a review
               </a>
-              {user ? (
+              {showcaseMode ? (
+                <Link className="landing-secondary-button" href="/playground?prompt=security%20check">
+                  Explore hosted demo
+                </Link>
+              ) : user ? (
                 <Link className="landing-secondary-button" href="/dashboard">
                   Open workspace dashboard
                 </Link>
@@ -164,6 +181,13 @@ export default async function HomePage() {
                 way to review web surfaces.
               </p>
             </div>
+
+            {showcaseMode ? (
+              <div className="landing-showcase-note">
+                Public showcase deployment. Live account creation and scan execution will be enabled
+                after the production backend migration.
+              </div>
+            ) : null}
           </div>
 
           <div className="landing-hero-stage landing-animate" id="launcher" style={{ animationDelay: "160ms" }}>
@@ -286,6 +310,10 @@ export default async function HomePage() {
           {user ? (
             <Link className="landing-secondary-button" href="/dashboard">
               View dashboard
+            </Link>
+          ) : showcaseMode ? (
+            <Link className="landing-secondary-button" href="https://github.com/digvijay208/SurfaceIQ">
+              View GitHub
             </Link>
           ) : (
             <Link className="landing-secondary-button" href="/signup">

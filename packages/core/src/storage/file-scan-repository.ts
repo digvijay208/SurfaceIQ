@@ -24,6 +24,7 @@ import {
 } from "../utils";
 import { buildScanReportSummary } from "../reporting/summary";
 import { getDataRoot } from "./paths";
+import type { ScanRepository } from "./contracts";
 
 interface DatabaseShape {
   users: UserRecord[];
@@ -45,7 +46,7 @@ const EMPTY_DATABASE: DatabaseShape = {
   runSteps: []
 };
 
-export class FileScanRepository {
+export class FileScanRepository implements ScanRepository {
   private readonly dataRoot = getDataRoot(import.meta.url);
 
   private readonly dbPath = join(this.dataRoot, "db.json");

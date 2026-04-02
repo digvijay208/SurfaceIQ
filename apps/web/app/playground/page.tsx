@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PlaygroundRunner } from "../../components/playground-runner";
+import { isShowcaseMode } from "../../lib/app-mode";
 import { getCurrentUser } from "../../lib/auth";
 import { buildPromptBlueprint } from "../../lib/playground";
 
@@ -13,6 +14,7 @@ export default async function PlaygroundPage(props: {
   const prompt = searchParams.prompt ?? "security check";
   const blueprint = buildPromptBlueprint(prompt);
   const user = await getCurrentUser();
+  const showcaseMode = isShowcaseMode();
 
   return (
     <main className="playground-page">
@@ -30,6 +32,7 @@ export default async function PlaygroundPage(props: {
         isAuthenticated={Boolean(user)}
         prompt={blueprint.prompt}
         references={blueprint.references}
+        showcaseMode={showcaseMode}
       />
     </main>
   );

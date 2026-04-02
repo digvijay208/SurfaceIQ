@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isShowcaseMode } from "../../../lib/app-mode";
 import { getCurrentUser } from "../../../lib/auth";
 import { scanRepository } from "../../../lib/server";
 
@@ -17,6 +18,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (isShowcaseMode()) {
+    return NextResponse.json(
+      {
+        error: "Hosted showcase mode is read-only while the global scanning backend is being connected."
+      },
+      { status: 503 }
+    );
+  }
+
   const payload = (await request.json().catch(() => null)) as
     | {
         startUrl?: string;

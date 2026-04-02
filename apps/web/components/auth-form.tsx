@@ -11,6 +11,7 @@ export function AuthForm({ mode, nextPath }: { mode: "login" | "signup"; nextPat
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const showcaseMode = process.env.NEXT_PUBLIC_SURFACEIQ_SHOWCASE_MODE === "1";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,51 +60,63 @@ export function AuthForm({ mode, nextPath }: { mode: "login" | "signup"; nextPat
             : "Your scans, credentials, artifacts, and results stay scoped to your account."}
         </p>
 
-        <form className="scan-form" onSubmit={handleSubmit}>
-          {mode === "signup" ? (
+        {showcaseMode ? (
+          <div className="auth-cta-stack">
+            <p className="muted">
+              This Vercel deployment is currently running in showcase mode while the global backend is
+              being migrated. Account creation and live scans will be enabled in the production pass.
+            </p>
+            <Link className="primary-button" href="/">
+              Back to homepage
+            </Link>
+          </div>
+        ) : (
+          <form className="scan-form" onSubmit={handleSubmit}>
+            {mode === "signup" ? (
+              <label>
+                Name
+                <input
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </label>
+            ) : null}
+
             <label>
-              Name
+              Email
               <input
                 required
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
               />
             </label>
-          ) : null}
 
-          <label>
-            Email
-            <input
-              required
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
+            <label>
+              Password
+              <input
+                required
+                type="password"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
 
-          <label>
-            Password
-            <input
-              required
-              type="password"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-
-          <button className="primary-button" disabled={isPending} type="submit">
-            {isPending
-              ? mode === "login"
-                ? "Signing in..."
-                : "Creating account..."
-              : mode === "login"
-                ? "Sign in"
-                : "Create account"}
-          </button>
-        </form>
+            <button className="primary-button" disabled={isPending} type="submit">
+              {isPending
+                ? mode === "login"
+                  ? "Signing in..."
+                  : "Creating account..."
+                : mode === "login"
+                  ? "Sign in"
+                  : "Create account"}
+            </button>
+          </form>
+        )}
 
         {error ? <div className="status-pill failed">{error}</div> : null}
 
